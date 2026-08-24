@@ -477,16 +477,6 @@
             color: var(--text-primary);
         }
 
-        .btn-danger:hover {
-            background: #cc0000;
-            transform: translateY(-2px);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: var(--bg-primary);
-        }
-
         .btn-sm {
             padding: 8px 15px;
             font-size: 0.85rem;
@@ -530,10 +520,6 @@
         textarea.form-control {
             min-height: 140px;
             resize: vertical;
-        }
-
-        select.form-control {
-            cursor: pointer;
         }
 
         /* Grid Layouts */
@@ -683,24 +669,6 @@
             transform: scale(1.1);
         }
 
-        .manga-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            opacity: 0;
-            transition: var(--transition);
-            display: flex;
-            align-items: flex-end;
-            padding: 20px;
-        }
-
-        .manga-card:hover .manga-overlay {
-            opacity: 1;
-        }
-
         .manga-info {
             padding: 20px;
         }
@@ -748,8 +716,6 @@
             padding: 25px;
             text-align: center;
             transition: var(--transition);
-            position: relative;
-            overflow: hidden;
         }
 
         .stat-card:hover {
@@ -982,7 +948,6 @@
         .flex-wrap { flex-wrap: wrap; }
         .w-full { width: 100%; }
         .hidden { display: none; }
-        .relative { position: relative; }
 
         /* Loading Spinner */
         .spinner {
@@ -1196,9 +1161,6 @@
                         <i class="fas fa-bell"></i>
                         <span class="badge-dot hidden" id="notifBadge">0</span>
                     </button>
-                    <button class="icon-btn" onclick="navigateTo('messages')">
-                        <i class="fas fa-envelope"></i>
-                    </button>
                     <button class="icon-btn" onclick="navigateTo('profile')">
                         <i class="fas fa-user-circle"></i>
                     </button>
@@ -1233,9 +1195,6 @@
                         <h1 class="page-title">الأنمي</h1>
                         <p class="page-subtitle">مكتبة الأنمي الكاملة</p>
                     </div>
-                    <button class="btn btn-primary" onclick="showAddAnimeModal()">
-                        <i class="fas fa-plus"></i> إضافة أنمي
-                    </button>
                 </div>
                 <div id="animeList" class="grid-4"></div>
             </div>
@@ -1246,9 +1205,6 @@
                         <h1 class="page-title">المانجا</h1>
                         <p class="page-subtitle">مكتبة المانجا الكاملة</p>
                     </div>
-                    <button class="btn btn-primary" onclick="showAddMangaModal()">
-                        <i class="fas fa-plus"></i> إضافة مانجا
-                    </button>
                 </div>
                 <div id="mangaList" class="grid-4"></div>
             </div>
@@ -1346,13 +1302,6 @@
                     <h1 class="page-title">لوحة التحكم</h1>
                 </div>
                 <div id="adminContent"></div>
-            </div>
-
-            <div id="messagesPage" class="page">
-                <div class="page-header">
-                    <h1 class="page-title">الرسائل</h1>
-                </div>
-                <div id="messagesContent"></div>
             </div>
         </div>
     </div>
@@ -1468,6 +1417,8 @@
                     displayName: username, 
                     photoURL: 'https://ui-avatars.com/api/?name=' + username + '&background=7c5cff&color=fff' 
                 });
+                
+                // إنشاء مستند المستخدم في Firestore
                 await db.collection('users').doc(user.uid).set({
                     username: username,
                     displayName: username,
@@ -1495,12 +1446,14 @@
                     readingHistory: [],
                     watchlist: [],
                     favorites: [],
+                    saves: [],
                     settings: {
                         theme: 'dark',
                         notifications: true,
                         privacy: 'public'
                     }
                 });
+                
                 showToast('تم إنشاء الحساب بنجاح', 'success');
             } catch (error) {
                 showToast('خطأ في إنشاء الحساب: ' + error.message, 'error');
@@ -1585,17 +1538,17 @@
                 const usersSnapshot = await db.collection('users').get();
                 allUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                // Load Posts
+                // Load Posts (باستخدام authorId بدلاً من userId للتوافق مع القواعد)
                 const postsSnapshot = await db.collection('posts').orderBy('createdAt', 'desc').limit(100).get();
                 allPosts = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                // Load Anime
-                const animeSnapshot = await db.collection('anime').get();
-                allAnime = animeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Load Animes (باستخدام animes بدلاً من anime للتوافق مع القواعد)
+                const animesSnapshot = await db.collection('animes').get();
+                allAnime = animesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                // Load Manga
-                const mangaSnapshot = await db.collection('manga').get();
-                allManga = mangaSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Load Mangas (باستخدام mangas بدلاً من manga للتوافق مع القواعد)
+                const mangasSnapshot = await db.collection('mangas').get();
+                allManga = mangasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // Load Characters
                 const charactersSnapshot = await db.collection('characters').get();
@@ -1629,7 +1582,7 @@
 
         function checkAdminAccess() {
             const adminNav = document.getElementById('adminNavItem');
-            if (currentUser.role === 'admin' || currentUser.role === 'owner') {
+            if (currentUser.role === 'admin' || currentUser.role === 'owner' || currentUser.role === 'moderator') {
                 adminNav.classList.remove('hidden');
             }
         }
@@ -1663,7 +1616,6 @@
                 case 'library': renderLibrary(); break;
                 case 'settings': loadSettings(); break;
                 case 'admin': renderAdminPanel(); break;
-                case 'messages': renderMessages(); break;
             }
         }
 
@@ -1786,7 +1738,7 @@
         }
 
         function renderPost(post) {
-            const user = allUsers.find(u => u.id === post.userId) || {};
+            const user = allUsers.find(u => u.id === post.authorId) || {};
             const likes = post.likes || [];
             const comments = post.comments || [];
             const isLiked = likes.includes(currentUser.uid);
@@ -2045,7 +1997,7 @@
         function renderProfile() {
             const content = document.getElementById('profileContent');
             const user = currentUser;
-            const userPosts = allPosts.filter(p => p.userId === user.uid);
+            const userPosts = allPosts.filter(p => p.authorId === user.uid);
             
             content.innerHTML = `
                 <div class="card">
@@ -2079,7 +2031,7 @@
         function viewUserProfile(userId) {
             const user = allUsers.find(u => u.id === userId);
             if (!user) return;
-            const userPosts = allPosts.filter(p => p.userId === userId);
+            const userPosts = allPosts.filter(p => p.authorId === userId);
             const modalBody = document.getElementById('modalBody');
             
             modalBody.innerHTML = `
@@ -2223,7 +2175,7 @@
         // ADMIN PANEL
         // =====================
         function renderAdminPanel() {
-            if (!currentUser.role || (currentUser.role !== 'admin' && currentUser.role !== 'owner')) {
+            if (!currentUser.role || !['owner', 'admin', 'moderator'].includes(currentUser.role)) {
                 document.getElementById('adminContent').innerHTML = '<div class="card"><p class="text-muted">غير مصرح لك بالوصول</p></div>';
                 return;
             }
@@ -2366,7 +2318,7 @@
         async function submitAnime(e) {
             e.preventDefault();
             try {
-                await db.collection('anime').add({
+                await db.collection('animes').add({
                     title: document.getElementById('animeTitle').value,
                     titleAr: document.getElementById('animeTitleAr').value,
                     cover: document.getElementById('animeCover').value,
@@ -2426,7 +2378,7 @@
         async function submitManga(e) {
             e.preventDefault();
             try {
-                await db.collection('manga').add({
+                await db.collection('mangas').add({
                     title: document.getElementById('mangaTitle').value,
                     cover: document.getElementById('mangaCover').value,
                     description: document.getElementById('mangaDesc').value,
@@ -2539,7 +2491,7 @@
             }
             try {
                 const postData = {
-                    userId: currentUser.uid,
+                    authorId: currentUser.uid, // استخدام authorId بدلاً من userId
                     content: content,
                     image: postExtras.image,
                     poll: postExtras.poll,
@@ -2578,8 +2530,8 @@
                     } else {
                         await postRef.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) });
                         await addXP(1);
-                        await updateUserStats('likesReceived', 1, post.data().userId);
-                        await sendNotification(post.data().userId, 'أعجب بمنشورك', 'heart');
+                        await updateUserStats('likesReceived', 1, post.data().authorId);
+                        await sendNotification(post.data().authorId, 'أعجب بمنشورك', 'heart');
                     }
                 }
             } catch (error) {
@@ -2636,7 +2588,7 @@
                 <h4 class="mt-20"><i class="fas fa-comments"></i> التعليقات (${post.comments?.length || 0})</h4>
                 <div id="commentsList">
                     ${(post.comments || []).map(comment => {
-                        const commentUser = allUsers.find(u => u.id === comment.userId) || {};
+                        const commentUser = allUsers.find(u => u.id === comment.authorId) || {};
                         return `
                             <div class="card mb-10">
                                 <div class="flex gap-10">
@@ -2671,14 +2623,14 @@
                 if (post.exists) {
                     await postRef.update({
                         comments: firebase.firestore.FieldValue.arrayUnion({
-                            userId: currentUser.uid,
+                            authorId: currentUser.uid,
                             content: content,
                             createdAt: new Date().toISOString()
                         })
                     });
                     await addXP(5);
                     await updateUserStats('commentsCount', 1);
-                    await sendNotification(post.data().userId, 'علق على منشورك', 'comment');
+                    await sendNotification(post.data().authorId, 'علق على منشورك', 'comment');
                     document.getElementById('commentContent').value = '';
                     viewPost(postId);
                     showToast('تم إضافة التعليق', 'success');
@@ -2747,6 +2699,7 @@
                     name: name,
                     description: description || '',
                     category: category || 'عام',
+                    createdBy: currentUser.uid, // استخدام createdBy بدلاً من userId
                     members: [currentUser.uid],
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -2902,7 +2855,6 @@
             const manga = allManga.find(m => m.id === mangaId);
             if (manga) {
                 showToast('بدء قراءة: ' + manga.title, 'info');
-                // Add to reading history
                 addToHistory(manga.title, 1);
             }
         }
@@ -3004,7 +2956,7 @@
         async function sendNotification(userId, message, icon) {
             try {
                 await db.collection('notifications').add({
-                    userId: userId,
+                    to: userId, // استخدام to بدلاً من userId للتوافق مع القواعد
                     message: message,
                     icon: icon,
                     read: false,
@@ -3020,7 +2972,7 @@
             notifPanel.classList.add('active');
             try {
                 const notifSnapshot = await db.collection('notifications')
-                    .where('userId', '==', currentUser.uid)
+                    .where('to', '==', currentUser.uid)
                     .orderBy('createdAt', 'desc')
                     .limit(50)
                     .get();
@@ -3094,20 +3046,6 @@
         }
 
         // =====================
-        // MESSAGES
-        // =====================
-        function renderMessages() {
-            const content = document.getElementById('messagesContent');
-            content.innerHTML = `
-                <div class="card text-center">
-                    <i class="fas fa-envelope text-primary" style="font-size: 3rem;"></i>
-                    <h3 class="mt-20">نظام الرسائل</h3>
-                    <p class="text-muted">سيتم إضافة نظام الرسائل المباشرة قريباً</p>
-                </div>
-            `;
-        }
-
-        // =====================
         // MODAL FUNCTIONS
         // =====================
         function closeModal(event) {
@@ -3167,7 +3105,7 @@
 
             // Listen to notifications
             db.collection('notifications')
-                .where('userId', '==', currentUser.uid)
+                .where('to', '==', currentUser.uid)
                 .where('read', '==', false)
                 .onSnapshot(snapshot => {
                     currentNotifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
