@@ -1011,6 +1011,330 @@
             from { transform: translateX(-100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+
+        /* =====================
+           AUTH ENHANCEMENTS
+        ===================== */
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 25px 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .auth-divider::before, .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .btn-google {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 15px;
+            background: #ffffff;
+            color: #1f1f1f;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-google:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .btn-google:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-google svg { width: 20px; height: 20px; }
+
+        .btn[disabled], button[disabled] { opacity: 0.65; cursor: not-allowed; pointer-events: none; }
+        .btn .btn-spinner {
+            width: 16px; height: 16px;
+            border: 2.5px solid rgba(255,255,255,0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            display: inline-block;
+            animation: spin 0.7s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .field-error {
+            color: var(--danger);
+            font-size: 0.8rem;
+            margin-top: 6px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+        .field-error.show { display: flex; }
+        .form-control.invalid { border-color: var(--danger); }
+
+        .auth-alert {
+            display: none;
+            align-items: flex-start;
+            gap: 10px;
+            background: rgba(255,68,68,0.1);
+            border: 1px solid rgba(255,68,68,0.35);
+            color: #ff8080;
+            padding: 12px 15px;
+            border-radius: var(--radius-xs);
+            font-size: 0.88rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .auth-alert.show { display: flex; }
+        .auth-alert.warning { background: rgba(255,187,0,0.1); border-color: rgba(255,187,0,0.35); color: var(--warning); }
+        .auth-alert.success { background: rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.35); color: var(--success); }
+
+        .auth-links-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+        .auth-link {
+            color: var(--accent-light);
+            font-size: 0.88rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .auth-link:hover { color: var(--accent); text-decoration: underline; }
+
+        .auth-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        .auth-back:hover { color: var(--text-primary); }
+
+        /* =====================
+           MANGA READER
+        ===================== */
+        .manga-reader-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000000;
+            z-index: 5000;
+            display: none;
+            flex-direction: column;
+        }
+        .manga-reader-overlay.active { display: flex; }
+
+        .reader-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 22px;
+            background: rgba(19,19,32,0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+            z-index: 2;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .reader-title-block { display: flex; flex-direction: column; min-width: 0; }
+        .reader-title-block .reader-manga-title {
+            font-weight: 800; font-size: 1.05rem;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55vw;
+        }
+        .reader-title-block .reader-chapter-title { color: var(--text-muted); font-size: 0.85rem; }
+
+        .reader-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .reader-btn {
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            width: 42px; height: 42px;
+            border-radius: var(--radius-xs);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+        .reader-btn:hover { background: var(--accent); border-color: var(--accent); }
+        .reader-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .reader-btn.close-btn:hover { background: var(--danger); border-color: var(--danger); }
+
+        .reader-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .reader-pages-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0 80px;
+            scroll-behavior: smooth;
+        }
+        .reader-page-img {
+            max-width: 100%;
+            display: block;
+            margin: 0 auto 4px;
+            transition: width 0.25s ease;
+            background: var(--bg-secondary);
+            min-height: 200px;
+        }
+        .reader-page-counter {
+            position: fixed;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(19,19,32,0.9);
+            border: 1px solid var(--border);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            z-index: 3;
+            backdrop-filter: blur(10px);
+        }
+
+        .chapter-list-panel {
+            width: 320px;
+            max-width: 85vw;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.35s ease;
+            position: absolute;
+            top: 0; bottom: 0; left: 0;
+            z-index: 4;
+        }
+        [dir="rtl"] .chapter-list-panel { transform: translateX(-100%); }
+        .chapter-list-panel.open { transform: translateX(0); }
+        .chapter-list-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 800;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .chapter-list-item {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .chapter-list-item:hover { background: var(--bg-hover); }
+        .chapter-list-item.active { background: var(--accent); color: #fff; }
+
+        .reader-loading {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 80px 20px; color: var(--text-muted); gap: 15px;
+        }
+
+        /* =====================
+           MESSAGES PAGE
+        ===================== */
+        .messages-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            height: calc(100vh - var(--header-height) - 100px);
+        }
+        .conv-list {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow-y: auto;
+        }
+        .conv-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .conv-item:hover, .conv-item.active { background: var(--bg-hover); }
+        .conv-item img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; }
+        .conv-item-info { flex: 1; min-width: 0; }
+        .conv-item-name { font-weight: 700; font-size: 0.95rem; }
+        .conv-item-last { color: var(--text-muted); font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .chat-bubble { max-width: 65%; padding: 12px 16px; border-radius: 18px; font-size: 0.92rem; line-height: 1.5; }
+        .chat-bubble.mine { align-self: flex-start; background: var(--accent-gradient); border-bottom-left-radius: 4px; }
+        .chat-bubble.theirs { align-self: flex-end; background: var(--bg-hover); border-bottom-right-radius: 4px; }
+        .chat-input-row { display: flex; gap: 10px; padding: 15px; border-top: 1px solid var(--border); }
+        .chat-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 15px; }
+
+        @media (max-width: 768px) {
+            .messages-layout { grid-template-columns: 1fr; height: auto; }
+            .chat-panel { height: 60vh; }
+        }
+
+        /* =====================
+           CALENDAR PAGE
+        ===================== */
+        .calendar-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .calendar-day-name { text-align: center; color: var(--text-muted); font-weight: 700; font-size: 0.85rem; padding: 8px 0; }
+        .calendar-cell {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            min-height: 90px;
+            padding: 8px;
+            font-size: 0.85rem;
+            position: relative;
+            transition: var(--transition);
+        }
+        .calendar-cell.empty { background: transparent; border: none; }
+        .calendar-cell.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+        .calendar-cell-num { font-weight: 700; color: var(--text-secondary); }
+        .calendar-event {
+            margin-top: 6px; padding: 3px 6px; border-radius: 6px;
+            background: rgba(124,92,255,0.2); color: var(--accent-light);
+            font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* =====================
+           TRENDING PAGE
+        ===================== */
+        .trending-list { display: flex; flex-direction: column; gap: 12px; }
+        .trending-item {
+            display: flex; align-items: center; gap: 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .trending-item:hover { border-color: var(--accent); transform: translateX(-4px); }
+        .trending-rank {
+            font-size: 1.6rem; font-weight: 900;
+            width: 45px; text-align: center;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .trending-item img { width: 60px; height: 80px; object-fit: cover; border-radius: var(--radius-xs); }
+        .trending-info { flex: 1; min-width: 0; }
+        .trending-info h4 { margin-bottom: 4px; }
+        .trending-stats { display: flex; gap: 15px; color: var(--text-muted); font-size: 0.82rem; margin-top: 6px; }
     </style>
 </head>
 <body>
@@ -1024,42 +1348,77 @@
                 <h1>ANIME MODS PRO</h1>
                 <p class="text-muted">منصة الأنمي والمانجا المجتمعية المتكاملة</p>
             </div>
-            <div class="auth-tabs">
+            <div class="auth-tabs" id="authTabs">
                 <div class="auth-tab active" data-tab="login">تسجيل الدخول</div>
                 <div class="auth-tab" data-tab="register">إنشاء حساب</div>
             </div>
-            <form id="loginForm">
+
+            <!-- Google Sign-In -->
+            <button type="button" class="btn-google" id="googleSignInBtn" onclick="signInWithGoogle()">
+                <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+                <span id="googleBtnText">الدخول باستخدام Google</span>
+            </button>
+
+            <div class="auth-divider">أو</div>
+
+            <div class="auth-alert" id="authAlert"></div>
+
+            <form id="loginForm" novalidate>
                 <div class="form-group">
                     <label><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
                     <input type="email" class="form-control" id="loginEmail" placeholder="example@email.com" required>
+                    <div class="field-error" id="loginEmailError"><i class="fas fa-circle-exclamation"></i> <span></span></div>
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-lock"></i> كلمة المرور</label>
                     <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
+                    <div class="field-error" id="loginPasswordError"><i class="fas fa-circle-exclamation"></i> <span></span></div>
                 </div>
-                <button type="submit" class="btn btn-primary w-full btn-lg">
-                    <i class="fas fa-sign-in-alt"></i> دخول
+                <div class="auth-links-row">
+                    <span class="auth-link" onclick="showForgotPassword()">نسيت كلمة المرور؟</span>
+                </div>
+                <button type="submit" class="btn btn-primary w-full btn-lg" id="loginSubmitBtn">
+                    <i class="fas fa-sign-in-alt"></i> <span>دخول</span>
                 </button>
             </form>
-            <form id="registerForm" class="hidden">
+
+            <form id="registerForm" class="hidden" novalidate>
                 <div class="form-group">
                     <label><i class="fas fa-user"></i> اسم المستخدم</label>
                     <input type="text" class="form-control" id="regUsername" placeholder="Username" required>
+                    <div class="field-error" id="regUsernameError"><i class="fas fa-circle-exclamation"></i> <span></span></div>
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
                     <input type="email" class="form-control" id="regEmail" placeholder="example@email.com" required>
+                    <div class="field-error" id="regEmailError"><i class="fas fa-circle-exclamation"></i> <span></span></div>
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-lock"></i> كلمة المرور</label>
                     <input type="password" class="form-control" id="regPassword" placeholder="••••••••" required>
+                    <div class="field-error" id="regPasswordError"><i class="fas fa-circle-exclamation"></i> <span></span></div>
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-check-circle"></i> تأكيد كلمة المرور</label>
                     <input type="password" class="form-control" id="regConfirmPassword" placeholder="••••••••" required>
+                    <div class="field-error" id="regConfirmPasswordError"><i class="fas fa-circle-exclamation"></i> <span></span></div>
                 </div>
-                <button type="submit" class="btn btn-primary w-full btn-lg">
-                    <i class="fas fa-user-plus"></i> إنشاء الحساب
+                <button type="submit" class="btn btn-primary w-full btn-lg" id="registerSubmitBtn">
+                    <i class="fas fa-user-plus"></i> <span>إنشاء الحساب</span>
+                </button>
+            </form>
+
+            <!-- Forgot Password Form -->
+            <form id="forgotPasswordForm" class="hidden" novalidate>
+                <span class="auth-back" onclick="hideForgotPassword()"><i class="fas fa-arrow-right"></i> رجوع لتسجيل الدخول</span>
+                <p class="text-muted mb-20">أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور.</p>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
+                    <input type="email" class="form-control" id="forgotEmail" placeholder="example@email.com" required>
+                    <div class="field-error" id="forgotEmailError"><i class="fas fa-circle-exclamation"></i> <span></span></div>
+                </div>
+                <button type="submit" class="btn btn-primary w-full btn-lg" id="forgotSubmitBtn">
+                    <i class="fas fa-paper-plane"></i> <span>إرسال رابط إعادة التعيين</span>
                 </button>
             </form>
         </div>
@@ -1112,6 +1471,16 @@
                     </a>
                     <a class="nav-item" data-page="leaderboard" onclick="navigateTo('leaderboard')">
                         <i class="fas fa-trophy"></i> المتصدرون
+                    </a>
+                    <a class="nav-item" data-page="trending" onclick="navigateTo('trending')">
+                        <i class="fas fa-fire"></i> الأكثر رواجاً
+                    </a>
+                    <a class="nav-item" data-page="messages" onclick="navigateTo('messages')">
+                        <i class="fas fa-envelope-open-text"></i> الرسائل
+                        <span class="badge-dot hidden" id="msgNavBadge">0</span>
+                    </a>
+                    <a class="nav-item" data-page="calendar" onclick="navigateTo('calendar')">
+                        <i class="fas fa-calendar-alt"></i> التقويم
                     </a>
                 </div>
                 <div class="nav-section">
@@ -1303,6 +1672,64 @@
                 </div>
                 <div id="adminContent"></div>
             </div>
+
+            <div id="trendingPage" class="page">
+                <div class="page-header">
+                    <h1 class="page-title"><i class="fas fa-fire"></i> الأكثر رواجاً</h1>
+                    <p class="page-subtitle">الأعمال والمنشورات الأكثر تفاعلاً الآن</p>
+                </div>
+                <div id="trendingContent"></div>
+            </div>
+
+            <div id="messagesPage" class="page">
+                <div class="page-header">
+                    <h1 class="page-title"><i class="fas fa-envelope-open-text"></i> الرسائل</h1>
+                    <p class="page-subtitle">محادثاتك الخاصة</p>
+                </div>
+                <div id="messagesContent"></div>
+            </div>
+
+            <div id="calendarPage" class="page">
+                <div class="page-header">
+                    <h1 class="page-title"><i class="fas fa-calendar-alt"></i> التقويم</h1>
+                    <p class="page-subtitle">مواعيد صدور الحلقات والفصول والفعاليات</p>
+                </div>
+                <div id="calendarContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manga Reader Overlay -->
+    <div id="mangaReaderOverlay" class="manga-reader-overlay">
+        <div class="reader-header">
+            <div class="flex" style="align-items:center; gap:14px;">
+                <button class="reader-btn close-btn" onclick="closeReader()" title="إغلاق"><i class="fas fa-xmark"></i></button>
+                <div class="reader-title-block">
+                    <span class="reader-manga-title" id="readerMangaTitle">-</span>
+                    <span class="reader-chapter-title" id="readerChapterTitle">-</span>
+                </div>
+            </div>
+            <div class="reader-toolbar">
+                <button class="reader-btn" id="readerPrevBtn" onclick="prevChapter()" title="الفصل السابق"><i class="fas fa-chevron-right"></i></button>
+                <button class="reader-btn" id="readerNextBtn" onclick="nextChapter()" title="الفصل التالي"><i class="fas fa-chevron-left"></i></button>
+                <button class="reader-btn" onclick="toggleChapterListPanel()" title="قائمة الفصول"><i class="fas fa-list"></i></button>
+                <button class="reader-btn" onclick="zoomOut()" title="تصغير"><i class="fas fa-magnifying-glass-minus"></i></button>
+                <button class="reader-btn" onclick="zoomIn()" title="تكبير"><i class="fas fa-magnifying-glass-plus"></i></button>
+                <button class="reader-btn" onclick="toggleReaderFullscreen()" title="ملء الشاشة" id="readerFullscreenBtn"><i class="fas fa-expand"></i></button>
+            </div>
+        </div>
+        <div class="reader-body">
+            <div class="chapter-list-panel" id="chapterListPanel">
+                <div class="chapter-list-header">
+                    <span><i class="fas fa-list-ol"></i> الفصول</span>
+                    <span class="modal-close" style="position:static;" onclick="toggleChapterListPanel()">&times;</span>
+                </div>
+                <div id="chapterListItems"></div>
+            </div>
+            <div class="reader-pages-scroll" id="readerPagesScroll">
+                <div class="reader-loading"><div class="spinner"></div><span>جاري تحميل الصفحات...</span></div>
+            </div>
+            <div class="reader-page-counter" id="readerPageCounter">1 / 1</div>
         </div>
     </div>
 
@@ -1379,90 +1806,269 @@
         // =====================
         // AUTHENTICATION
         // =====================
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        let authBusy = false; // منع الضغط المتكرر أثناء أي عملية مصادقة
+        const REDIRECT_KEY = 'amp_redirect_page';
+
+        // ترجمة أكواد أخطاء Firebase لرسائل عربية واضحة
+        function translateAuthError(error) {
+            const map = {
+                'auth/invalid-email': 'صيغة البريد الإلكتروني غير صحيحة',
+                'auth/user-disabled': 'تم تعطيل هذا الحساب، تواصل مع الدعم',
+                'auth/user-not-found': 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني',
+                'auth/wrong-password': 'كلمة المرور غير صحيحة',
+                'auth/invalid-credential': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+                'auth/invalid-login-credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+                'auth/email-already-in-use': 'هذا البريد الإلكتروني مستخدم بالفعل',
+                'auth/weak-password': 'كلمة المرور ضعيفة جداً، استخدم 6 أحرف على الأقل',
+                'auth/too-many-requests': 'محاولات كثيرة جداً، حاول مرة أخرى بعد قليل',
+                'auth/network-request-failed': 'تعذر الاتصال بالخادم، تحقق من اتصالك بالإنترنت',
+                'auth/popup-closed-by-user': 'تم إغلاق نافذة تسجيل الدخول قبل الإكمال',
+                'auth/cancelled-popup-request': 'تم إلغاء طلب تسجيل الدخول',
+                'auth/popup-blocked': 'المتصفح منع فتح نافذة تسجيل الدخول، فعّل النوافذ المنبثقة',
+                'auth/account-exists-with-different-credential': 'يوجد حساب بنفس البريد بطريقة تسجيل دخول مختلفة',
+                'auth/missing-email': 'برجاء إدخال البريد الإلكتروني'
+            };
+            return map[error.code] || error.message || 'حدث خطأ غير متوقع، حاول مرة أخرى';
+        }
+
+        function setFieldError(id, message) {
+            const el = document.getElementById(id);
+            const input = el ? el.previousElementSibling : null;
+            if (!el) return;
+            if (message) {
+                el.querySelector('span').textContent = message;
+                el.classList.add('show');
+                if (input && input.classList && input.classList.contains('form-control')) input.classList.add('invalid');
+            } else {
+                el.classList.remove('show');
+                if (input && input.classList && input.classList.contains('form-control')) input.classList.remove('invalid');
+            }
+        }
+
+        function clearFieldErrors(...ids) {
+            ids.forEach(id => setFieldError(id, ''));
+        }
+
+        function showAuthAlert(message, type = 'error') {
+            const alertEl = document.getElementById('authAlert');
+            if (!alertEl) return;
+            alertEl.className = 'auth-alert show' + (type !== 'error' ? ' ' + type : '');
+            alertEl.innerHTML = `<i class="fas fa-${type === 'success' ? 'circle-check' : type === 'warning' ? 'triangle-exclamation' : 'circle-exclamation'}"></i> <span>${message}</span>`;
+        }
+
+        function hideAuthAlert() {
+            const alertEl = document.getElementById('authAlert');
+            if (alertEl) alertEl.className = 'auth-alert';
+        }
+
+        function setButtonLoading(btn, loading, loadingText) {
+            if (!btn) return;
+            if (loading) {
+                btn.dataset.originalHtml = btn.innerHTML;
+                const label = loadingText || 'جاري المعالجة...';
+                btn.innerHTML = `<span class="btn-spinner"></span> <span>${label}</span>`;
+                btn.disabled = true;
+            } else {
+                if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // يحفظ الصفحة المطلوبة قبل تسجيل الدخول ليعود إليها المستخدم بعده
+        function rememberIntendedPage(page) {
+            try { sessionStorage.setItem(REDIRECT_KEY, page); } catch (e) {}
+        }
+        function consumeIntendedPage() {
+            try {
+                const page = sessionStorage.getItem(REDIRECT_KEY);
+                sessionStorage.removeItem(REDIRECT_KEY);
+                return page;
+            } catch (e) { return null; }
+        }
+
+        // إنشاء مستند المستخدم في Firestore إن لم يكن موجوداً (يُستخدم لكل من التسجيل العادي و Google)
+        async function ensureUserDocument(user, extra = {}) {
+            const userRef = db.collection('users').doc(user.uid);
+            const snap = await userRef.get();
+            if (snap.exists) {
+                await userRef.update({
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'online'
+                });
+                return;
+            }
+            const username = extra.username || user.displayName || (user.email ? user.email.split('@')[0] : 'مستخدم');
+            const avatar = user.photoURL || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(username) + '&background=7c5cff&color=fff');
+            await userRef.set({
+                username: username,
+                displayName: username,
+                avatar: avatar,
+                bio: 'أهلاً بالجميع! أنا عضو جديد في Anime Mods Pro',
+                banner: '',
+                country: '',
+                language: 'ar',
+                joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                status: 'online',
+                followers: 0,
+                following: 0,
+                followersList: [],
+                followingList: [],
+                xp: 0,
+                level: 1,
+                reputation: 0,
+                badges: ['مبتدئ'],
+                role: 'user',
+                verified: false,
+                postsCount: 0,
+                commentsCount: 0,
+                likesReceived: 0,
+                readingHistory: [],
+                readingProgress: {},
+                watchlist: [],
+                favorites: [],
+                saves: [],
+                settings: {
+                    theme: 'dark',
+                    notifications: true,
+                    privacy: 'public'
+                }
+            });
+        }
+
+        // تسجيل الدخول بالبريد وكلمة المرور
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
+            if (authBusy) return;
+            hideAuthAlert();
+            clearFieldErrors('loginEmailError', 'loginPasswordError');
+
+            const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
+            let hasError = false;
+            if (!email) { setFieldError('loginEmailError', 'البريد الإلكتروني مطلوب'); hasError = true; }
+            if (!password) { setFieldError('loginPasswordError', 'كلمة المرور مطلوبة'); hasError = true; }
+            if (hasError) return;
+
+            const btn = document.getElementById('loginSubmitBtn');
+            authBusy = true;
+            setButtonLoading(btn, true, 'جاري تسجيل الدخول...');
             try {
-                showLoading('تسجيل الدخول...');
                 await auth.signInWithEmailAndPassword(email, password);
                 showToast('تم تسجيل الدخول بنجاح', 'success');
             } catch (error) {
-                showToast('خطأ في تسجيل الدخول: ' + error.message, 'error');
+                showAuthAlert(translateAuthError(error), 'error');
+            } finally {
+                authBusy = false;
+                setButtonLoading(btn, false);
             }
         });
 
+        // إنشاء حساب جديد
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('regUsername').value;
-            const email = document.getElementById('regEmail').value;
+            if (authBusy) return;
+            hideAuthAlert();
+            clearFieldErrors('regUsernameError', 'regEmailError', 'regPasswordError', 'regConfirmPasswordError');
+
+            const username = document.getElementById('regUsername').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('regConfirmPassword').value;
 
-            if (password !== confirmPassword) {
-                showToast('كلمة المرور غير متطابقة', 'error');
-                return;
-            }
+            let hasError = false;
+            if (!username) { setFieldError('regUsernameError', 'اسم المستخدم مطلوب'); hasError = true; }
+            if (!email) { setFieldError('regEmailError', 'البريد الإلكتروني مطلوب'); hasError = true; }
+            if (password.length < 6) { setFieldError('regPasswordError', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'); hasError = true; }
+            if (password !== confirmPassword) { setFieldError('regConfirmPasswordError', 'كلمة المرور غير متطابقة'); hasError = true; }
+            if (hasError) return;
 
-            if (password.length < 6) {
-                showToast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'warning');
-                return;
-            }
-
+            const btn = document.getElementById('registerSubmitBtn');
+            authBusy = true;
+            setButtonLoading(btn, true, 'جاري إنشاء الحساب...');
             try {
-                showLoading('إنشاء الحساب...');
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
-                await user.updateProfile({ 
-                    displayName: username, 
-                    photoURL: 'https://ui-avatars.com/api/?name=' + username + '&background=7c5cff&color=fff' 
-                });
-                
-                // إنشاء مستند المستخدم في Firestore
-                await db.collection('users').doc(user.uid).set({
-                    username: username,
-                    displayName: username,
-                    avatar: 'https://ui-avatars.com/api/?name=' + username + '&background=7c5cff&color=fff',
-                    bio: 'أهلاً بالجميع! أنا عضو جديد في Anime Mods Pro',
-                    banner: '',
-                    country: '',
-                    language: 'ar',
-                    joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-                    status: 'online',
-                    followers: 0,
-                    following: 0,
-                    followersList: [],
-                    followingList: [],
-                    xp: 0,
-                    level: 1,
-                    reputation: 0,
-                    badges: ['مبتدئ'],
-                    role: 'user',
-                    verified: false,
-                    postsCount: 0,
-                    commentsCount: 0,
-                    likesReceived: 0,
-                    readingHistory: [],
-                    watchlist: [],
-                    favorites: [],
-                    saves: [],
-                    settings: {
-                        theme: 'dark',
-                        notifications: true,
-                        privacy: 'public'
-                    }
-                });
-                
+                const avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(username) + '&background=7c5cff&color=fff';
+                await user.updateProfile({ displayName: username, photoURL: avatar });
+                await ensureUserDocument(user, { username });
                 showToast('تم إنشاء الحساب بنجاح', 'success');
             } catch (error) {
-                showToast('خطأ في إنشاء الحساب: ' + error.message, 'error');
+                showAuthAlert(translateAuthError(error), 'error');
+            } finally {
+                authBusy = false;
+                setButtonLoading(btn, false);
+            }
+        });
+
+        // تسجيل الدخول عبر Google
+        async function signInWithGoogle() {
+            if (authBusy) return;
+            hideAuthAlert();
+            const btn = document.getElementById('googleSignInBtn');
+            authBusy = true;
+            setButtonLoading(btn, true, 'جاري الاتصال بـ Google...');
+            try {
+                const result = await auth.signInWithPopup(googleProvider);
+                await ensureUserDocument(result.user);
+                showToast('تم تسجيل الدخول بنجاح', 'success');
+            } catch (error) {
+                if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+                    showAuthAlert(translateAuthError(error), 'error');
+                }
+            } finally {
+                authBusy = false;
+                setButtonLoading(btn, false);
+            }
+        }
+
+        // نسيت كلمة المرور
+        function showForgotPassword() {
+            hideAuthAlert();
+            document.getElementById('authTabs').classList.add('hidden');
+            document.getElementById('googleSignInBtn').classList.add('hidden');
+            document.querySelector('.auth-divider').classList.add('hidden');
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('forgotPasswordForm').classList.remove('hidden');
+        }
+
+        function hideForgotPassword() {
+            hideAuthAlert();
+            document.getElementById('authTabs').classList.remove('hidden');
+            document.getElementById('googleSignInBtn').classList.remove('hidden');
+            document.querySelector('.auth-divider').classList.remove('hidden');
+            document.getElementById('forgotPasswordForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+        }
+
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (authBusy) return;
+            hideAuthAlert();
+            clearFieldErrors('forgotEmailError');
+            const email = document.getElementById('forgotEmail').value.trim();
+            if (!email) { setFieldError('forgotEmailError', 'البريد الإلكتروني مطلوب'); return; }
+
+            const btn = document.getElementById('forgotSubmitBtn');
+            authBusy = true;
+            setButtonLoading(btn, true, 'جاري الإرسال...');
+            try {
+                await auth.sendPasswordResetEmail(email);
+                showAuthAlert('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني', 'success');
+            } catch (error) {
+                showAuthAlert(translateAuthError(error), 'error');
+            } finally {
+                authBusy = false;
+                setButtonLoading(btn, false);
             }
         });
 
         // Auth Tabs
         document.querySelectorAll('.auth-tab').forEach(tab => {
             tab.addEventListener('click', () => {
+                hideAuthAlert();
                 document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 const tabName = tab.dataset.tab;
@@ -1480,12 +2086,15 @@
                 await loadUserData();
                 await loadAllData();
                 setupRealtimeListeners();
-                navigateTo('home');
+                const intendedPage = consumeIntendedPage();
+                navigateTo(intendedPage || 'home');
                 updateUserStatus('online');
             } else {
                 currentUser = null;
+                if (currentPage && currentPage !== 'home') rememberIntendedPage(currentPage);
                 document.getElementById('authScreen').classList.remove('hidden');
                 document.getElementById('mainApp').classList.add('hidden');
+                hideForgotPassword();
             }
         });
 
@@ -1616,6 +2225,9 @@
                 case 'library': renderLibrary(); break;
                 case 'settings': loadSettings(); break;
                 case 'admin': renderAdminPanel(); break;
+                case 'trending': renderTrending(); break;
+                case 'messages': renderMessages(); break;
+                case 'calendar': renderCalendar(); break;
             }
         }
 
@@ -1967,6 +2579,226 @@
                     </div>
                 `).join('')}
             `;
+        }
+
+        // =====================
+        // TRENDING PAGE
+        // =====================
+        function renderTrending() {
+            const container = document.getElementById('trendingContent');
+            if (!container) return;
+
+            // ترتيب الأنمي والمانجا حسب المشاهدات/التقييم، والمنشورات حسب التفاعل
+            const trendingTitles = [...allAnime, ...allManga]
+                .map(item => ({ ...item, _score: (item.views || 0) + (item.rating || 0) * 50 }))
+                .sort((a, b) => b._score - a._score)
+                .slice(0, 10);
+
+            const trendingPosts = [...allPosts]
+                .map(post => ({ ...post, _score: (post.likes ? post.likes.length : 0) * 2 + (post.comments ? post.comments.length : 0) }))
+                .sort((a, b) => b._score - a._score)
+                .slice(0, 5);
+
+            if (trendingTitles.length === 0 && trendingPosts.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted mt-30"><i class="fas fa-fire" style="font-size:3rem;"></i><p class="mt-20">لا يوجد محتوى رائج حالياً</p></div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="trending-list mb-30">
+                    ${trendingTitles.map((item, index) => `
+                        <div class="trending-item" onclick="${item.chapters !== undefined ? `viewManga('${item.id}')` : `viewAnime('${item.id}')`}">
+                            <span class="trending-rank">${index + 1}</span>
+                            <img src="${item.cover || 'https://via.placeholder.com/60x80'}" alt="${item.title}">
+                            <div class="trending-info">
+                                <h4>${item.title}</h4>
+                                <span class="badge badge-${item.chapters !== undefined ? 'accent' : 'info'}">${item.chapters !== undefined ? 'مانجا' : 'أنمي'}</span>
+                                <div class="trending-stats">
+                                    <span><i class="fas fa-eye"></i> ${item.views || 0}</span>
+                                    <span><i class="fas fa-star"></i> ${item.rating || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${trendingPosts.length ? `
+                    <h3 class="mb-20"><i class="fas fa-comments"></i> منشورات رائجة</h3>
+                    <div class="flex flex-column gap-15" style="display:flex; flex-direction:column;">
+                        ${trendingPosts.map(post => renderPost(post)).join('')}
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // =====================
+        // MESSAGES PAGE
+        // =====================
+        let activeConversationId = null;
+        function renderMessages() {
+            const container = document.getElementById('messagesContent');
+            if (!container) return;
+            container.innerHTML = `
+                <div class="messages-layout">
+                    <div class="conv-list" id="convList">
+                        <div class="text-center text-muted" style="padding:40px 20px;"><div class="spinner"></div></div>
+                    </div>
+                    <div class="chat-panel" id="chatPanel">
+                        <div class="chat-empty">
+                            <i class="fas fa-comments" style="font-size:3rem;"></i>
+                            <p>اختر محادثة لبدء الدردشة</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            loadConversations();
+        }
+
+        async function loadConversations() {
+            try {
+                const snapshot = await db.collection('conversations')
+                    .where('participants', 'array-contains', currentUser.uid)
+                    .orderBy('lastMessageAt', 'desc')
+                    .limit(50).get();
+                const convList = document.getElementById('convList');
+                if (!convList) return;
+                if (snapshot.empty) {
+                    convList.innerHTML = `<div class="text-center text-muted" style="padding:40px 20px;"><i class="fas fa-inbox" style="font-size:2rem;"></i><p class="mt-10">لا توجد محادثات بعد</p></div>`;
+                    return;
+                }
+                const convs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                convList.innerHTML = convs.map(conv => {
+                    const otherId = (conv.participants || []).find(id => id !== currentUser.uid);
+                    const otherUser = allUsers.find(u => u.id === otherId) || {};
+                    return `
+                        <div class="conv-item" onclick="openConversation('${conv.id}')">
+                            <img src="${otherUser.avatar || 'https://ui-avatars.com/api/?name=User'}" alt="">
+                            <div class="conv-item-info">
+                                <div class="conv-item-name">${otherUser.username || 'مستخدم'}</div>
+                                <div class="conv-item-last">${(conv.lastMessage || '').slice(0, 40)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading conversations:', error);
+                const convList = document.getElementById('convList');
+                if (convList) convList.innerHTML = `<div class="text-center text-muted" style="padding:40px 20px;">تعذر تحميل المحادثات</div>`;
+            }
+        }
+
+        async function openConversation(convId) {
+            activeConversationId = convId;
+            document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
+            const chatPanel = document.getElementById('chatPanel');
+            chatPanel.innerHTML = `
+                <div class="chat-messages" id="chatMessages"><div class="text-center text-muted mt-20"><div class="spinner"></div></div></div>
+                <div class="chat-input-row">
+                    <input type="text" class="form-control" id="chatMessageInput" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter') sendMessage()">
+                    <button class="btn btn-primary" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            `;
+            try {
+                const snapshot = await db.collection('conversations').doc(convId)
+                    .collection('messages').orderBy('createdAt', 'asc').limit(200).get();
+                const messagesEl = document.getElementById('chatMessages');
+                if (snapshot.empty) {
+                    messagesEl.innerHTML = `<div class="chat-empty"><i class="fas fa-comment-dots"></i><p>ابدأ المحادثة الآن</p></div>`;
+                } else {
+                    messagesEl.innerHTML = snapshot.docs.map(doc => {
+                        const msg = doc.data();
+                        const mine = msg.senderId === currentUser.uid;
+                        return `<div class="chat-bubble ${mine ? 'mine' : 'theirs'}">${msg.text}</div>`;
+                    }).join('');
+                    messagesEl.scrollTop = messagesEl.scrollHeight;
+                }
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatMessageInput');
+            const text = input.value.trim();
+            if (!text || !activeConversationId) return;
+            input.value = '';
+            try {
+                await db.collection('conversations').doc(activeConversationId).collection('messages').add({
+                    text: text,
+                    senderId: currentUser.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await db.collection('conversations').doc(activeConversationId).update({
+                    lastMessage: text,
+                    lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                openConversation(activeConversationId);
+            } catch (error) {
+                showToast('تعذر إرسال الرسالة: ' + error.message, 'error');
+            }
+        }
+
+        // =====================
+        // CALENDAR PAGE
+        // =====================
+        let calendarViewDate = new Date();
+        function renderCalendar() {
+            const container = document.getElementById('calendarContent');
+            if (!container) return;
+            container.innerHTML = `
+                <div class="calendar-toolbar">
+                    <button class="btn btn-outline btn-sm" onclick="changeCalendarMonth(-1)"><i class="fas fa-chevron-right"></i> السابق</button>
+                    <h3 id="calendarMonthLabel"></h3>
+                    <button class="btn btn-outline btn-sm" onclick="changeCalendarMonth(1)">التالي <i class="fas fa-chevron-left"></i></button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            `;
+            drawCalendar();
+        }
+
+        function changeCalendarMonth(delta) {
+            calendarViewDate.setMonth(calendarViewDate.getMonth() + delta);
+            drawCalendar();
+        }
+
+        function drawCalendar() {
+            const label = document.getElementById('calendarMonthLabel');
+            const grid = document.getElementById('calendarGrid');
+            if (!label || !grid) return;
+
+            const year = calendarViewDate.getFullYear();
+            const month = calendarViewDate.getMonth();
+            label.textContent = calendarViewDate.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long' });
+
+            const dayNames = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+
+            // فعاليات تجريبية مبنية على أخبار المنصة (يمكن استبدالها بمجموعة "events" في Firestore)
+            const events = {};
+            (allNews || []).forEach(n => {
+                if (n.createdAt && n.createdAt.seconds) {
+                    const d = new Date(n.createdAt.seconds * 1000);
+                    if (d.getFullYear() === year && d.getMonth() === month) {
+                        events[d.getDate()] = events[d.getDate()] || [];
+                        events[d.getDate()].push(n.title);
+                    }
+                }
+            });
+
+            let html = dayNames.map(d => `<div class="calendar-day-name">${d}</div>`).join('');
+            for (let i = 0; i < firstDay; i++) html += `<div class="calendar-cell empty"></div>`;
+            for (let day = 1; day <= daysInMonth; day++) {
+                const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+                const dayEvents = events[day] || [];
+                html += `
+                    <div class="calendar-cell ${isToday ? 'today' : ''}">
+                        <div class="calendar-cell-num">${day}</div>
+                        ${dayEvents.slice(0, 2).map(e => `<div class="calendar-event" title="${e}">${e}</div>`).join('')}
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
         }
 
         function renderNews() {
@@ -2792,9 +3624,12 @@
                     <span class="badge badge-info"><i class="fas fa-file"></i> ${manga.chapters || 0} فصل</span>
                     <span class="badge badge-${manga.status === 'مكتمل' ? 'success' : 'accent'}">${manga.status || 'غير معروف'}</span>
                 </div>
-                <div class="flex gap-10 mt-20">
+                <div class="flex gap-10 mt-20 flex-wrap">
                     <button class="btn btn-primary" onclick="addToFavorites('${manga.id}')"><i class="fas fa-heart"></i> مفضلة</button>
                     <button class="btn btn-outline" onclick="startReading('${manga.id}')"><i class="fas fa-book-open"></i> ابدأ القراءة</button>
+                    ${userData && (userData.role === 'admin' || userData.role === 'moderator') ? `
+                        <button class="btn btn-outline" onclick="showAddChapterModal('${manga.id}')"><i class="fas fa-plus"></i> إضافة فصل</button>
+                    ` : ''}
                 </div>
             `;
             document.getElementById('modalOverlay').classList.add('active');
@@ -2852,11 +3687,7 @@
         }
 
         function startReading(mangaId) {
-            const manga = allManga.find(m => m.id === mangaId);
-            if (manga) {
-                showToast('بدء قراءة: ' + manga.title, 'info');
-                addToHistory(manga.title, 1);
-            }
+            openReader(mangaId);
         }
 
         async function addToHistory(title, chapter) {
@@ -2871,6 +3702,239 @@
                 });
             } catch (error) {
                 console.error('Error adding to history:', error);
+            }
+        }
+
+        // =====================
+        // MANGA READER
+        // =====================
+        const readerState = {
+            mangaId: null,
+            manga: null,
+            chapters: [],       // [{ number, title, pages: [urls] }]
+            chapterIndex: 0,
+            zoom: 100,
+            previousPage: 'manga',
+            observer: null
+        };
+
+        // يفتح قارئ المانجا عند فصل معيّن، أو يكمل من آخر نقطة محفوظة إن لم يُحدد فصل
+        function openReader(mangaId, chapterNumber) {
+            const manga = allManga.find(m => m.id === mangaId);
+            if (!manga) { showToast('المانجا غير موجودة', 'error'); return; }
+
+            const chapters = (manga.chapterList || []).slice().sort((a, b) => (a.number || 0) - (b.number || 0));
+            if (chapters.length === 0) {
+                showToast('لا توجد فصول متاحة لهذه المانجا بعد', 'warning');
+                return;
+            }
+
+            readerState.mangaId = mangaId;
+            readerState.manga = manga;
+            readerState.chapters = chapters;
+            readerState.previousPage = currentPage;
+            readerState.zoom = 100;
+
+            let startIndex = 0;
+            if (chapterNumber !== undefined && chapterNumber !== null) {
+                const idx = chapters.findIndex(c => c.number === chapterNumber);
+                startIndex = idx >= 0 ? idx : 0;
+            } else {
+                const savedProgress = (userData.readingProgress || {})[mangaId];
+                if (savedProgress) {
+                    const idx = chapters.findIndex(c => c.number === savedProgress.chapter);
+                    startIndex = idx >= 0 ? idx : 0;
+                }
+            }
+
+            closeModal();
+            document.getElementById('mangaReaderOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            renderChapterListPanel();
+            loadReaderChapter(startIndex);
+        }
+
+        function renderChapterListPanel() {
+            const panel = document.getElementById('chapterListItems');
+            panel.innerHTML = readerState.chapters.map((ch, index) => `
+                <div class="chapter-list-item ${index === readerState.chapterIndex ? 'active' : ''}" data-chapter-index="${index}" onclick="loadReaderChapter(${index}); toggleChapterListPanel();">
+                    <span>${ch.title || ('الفصل ' + ch.number)}</span>
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+            `).join('');
+        }
+
+        function loadReaderChapter(index) {
+            if (index < 0 || index >= readerState.chapters.length) return;
+            readerState.chapterIndex = index;
+            const chapter = readerState.chapters[index];
+            const manga = readerState.manga;
+
+            document.getElementById('readerMangaTitle').textContent = manga.title;
+            document.getElementById('readerChapterTitle').textContent = chapter.title || ('الفصل ' + chapter.number);
+            document.getElementById('readerPrevBtn').disabled = index >= readerState.chapters.length - 1;
+            document.getElementById('readerNextBtn').disabled = index <= 0;
+
+            const scrollEl = document.getElementById('readerPagesScroll');
+            const pages = chapter.pages || [];
+            if (pages.length === 0) {
+                scrollEl.innerHTML = `<div class="reader-loading"><i class="fas fa-image" style="font-size:2.5rem;"></i><span>لا توجد صفحات في هذا الفصل</span></div>`;
+                document.getElementById('readerPageCounter').textContent = '0 / 0';
+            } else {
+                scrollEl.innerHTML = pages.map((url, i) => `
+                    <img src="${url}" class="reader-page-img" data-page-index="${i}" style="width:${readerState.zoom}%" loading="lazy" alt="صفحة ${i + 1}"
+                         onerror="this.style.minHeight='150px'; this.alt='تعذر تحميل الصفحة ' + (${i} + 1);">
+                `).join('');
+                document.getElementById('readerPageCounter').textContent = `1 / ${pages.length}`;
+                setupReaderPageObserver(pages.length);
+            }
+            scrollEl.scrollTop = 0;
+
+            renderChapterListPanel();
+            saveReadingProgress(chapter.number, 1);
+            addToHistory(manga.title, chapter.number);
+        }
+
+        function setupReaderPageObserver(totalPages) {
+            if (readerState.observer) readerState.observer.disconnect();
+            const scrollEl = document.getElementById('readerPagesScroll');
+            readerState.observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const pageIndex = parseInt(entry.target.dataset.pageIndex, 10);
+                        document.getElementById('readerPageCounter').textContent = `${pageIndex + 1} / ${totalPages}`;
+                    }
+                });
+            }, { root: scrollEl, threshold: 0.5 });
+            document.querySelectorAll('.reader-page-img').forEach(img => readerState.observer.observe(img));
+        }
+
+        function nextChapter() {
+            if (readerState.chapterIndex > 0) loadReaderChapter(readerState.chapterIndex - 1);
+        }
+        function prevChapter() {
+            if (readerState.chapterIndex < readerState.chapters.length - 1) loadReaderChapter(readerState.chapterIndex + 1);
+        }
+
+        function toggleChapterListPanel() {
+            document.getElementById('chapterListPanel').classList.toggle('open');
+        }
+
+        function zoomIn() {
+            readerState.zoom = Math.min(200, readerState.zoom + 10);
+            applyReaderZoom();
+        }
+        function zoomOut() {
+            readerState.zoom = Math.max(50, readerState.zoom - 10);
+            applyReaderZoom();
+        }
+        function applyReaderZoom() {
+            document.querySelectorAll('.reader-page-img').forEach(img => { img.style.width = readerState.zoom + '%'; });
+        }
+
+        function toggleReaderFullscreen() {
+            const overlay = document.getElementById('mangaReaderOverlay');
+            const icon = document.querySelector('#readerFullscreenBtn i');
+            if (!document.fullscreenElement) {
+                overlay.requestFullscreen().then(() => {
+                    icon.classList.remove('fa-expand');
+                    icon.classList.add('fa-compress');
+                }).catch(() => showToast('تعذر تفعيل ملء الشاشة', 'error'));
+            } else {
+                document.exitFullscreen();
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand');
+            }
+        }
+
+        function closeReader() {
+            if (document.fullscreenElement) document.exitFullscreen();
+            if (readerState.observer) readerState.observer.disconnect();
+            document.getElementById('mangaReaderOverlay').classList.remove('active');
+            document.getElementById('chapterListPanel').classList.remove('open');
+            document.body.style.overflow = '';
+            const backTo = readerState.previousPage || 'manga';
+            readerState.mangaId = null;
+            readerState.manga = null;
+            readerState.chapters = [];
+            navigateTo(backTo);
+        }
+
+        async function saveReadingProgress(chapterNumber, pageNumber) {
+            if (!currentUser || !readerState.mangaId) return;
+            try {
+                const userRef = db.collection('users').doc(currentUser.uid);
+                await userRef.update({
+                    [`readingProgress.${readerState.mangaId}`]: {
+                        chapter: chapterNumber,
+                        page: pageNumber || 1,
+                        title: readerState.manga.title,
+                        updatedAt: new Date().toISOString()
+                    }
+                });
+                userData.readingProgress = userData.readingProgress || {};
+                userData.readingProgress[readerState.mangaId] = { chapter: chapterNumber, page: pageNumber || 1 };
+            } catch (error) {
+                console.error('Error saving reading progress:', error);
+            }
+        }
+
+        // =====================
+        // ADMIN: ADD CHAPTER (pages[] as external links, no Storage)
+        // =====================
+        function showAddChapterModal(mangaId) {
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <h3><i class="fas fa-file-circle-plus"></i> إضافة فصل جديد</h3>
+                <form onsubmit="submitChapter(event, '${mangaId}')">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>رقم الفصل</label>
+                            <input type="number" class="form-control" id="chapterNumber" required>
+                        </div>
+                        <div class="form-group">
+                            <label>عنوان الفصل (اختياري)</label>
+                            <input type="text" class="form-control" id="chapterTitleInput" placeholder="الفصل 1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>روابط صفحات الفصل (رابط صورة في كل سطر)</label>
+                        <textarea class="form-control" id="chapterPages" rows="8" placeholder="https://example.com/page1.jpg&#10;https://example.com/page2.jpg" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> إضافة الفصل</button>
+                </form>
+            `;
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        async function submitChapter(e, mangaId) {
+            e.preventDefault();
+            const number = parseInt(document.getElementById('chapterNumber').value, 10);
+            const title = document.getElementById('chapterTitleInput').value.trim();
+            const pages = document.getElementById('chapterPages').value
+                .split('\n')
+                .map(url => url.trim())
+                .filter(url => url.length > 0);
+
+            if (!number || pages.length === 0) {
+                showToast('يرجى إدخال رقم الفصل ورابط صورة واحد على الأقل', 'warning');
+                return;
+            }
+
+            try {
+                const mangaRef = db.collection('mangas').doc(mangaId);
+                await mangaRef.update({
+                    chapterList: firebase.firestore.FieldValue.arrayUnion({
+                        number: number,
+                        title: title || ('الفصل ' + number),
+                        pages: pages
+                    })
+                });
+                showToast('تمت إضافة الفصل بنجاح', 'success');
+                closeModal();
+                await loadAllData();
+            } catch (error) {
+                showToast('خطأ: ' + error.message, 'error');
             }
         }
 
@@ -3129,6 +4193,16 @@
             }
             return new Date(timestamp).toLocaleDateString('ar-EG');
         }
+
+        // Manga Reader: إغلاق بزر Escape وإغلاق قائمة الفصول بالنقر خارجها
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('mangaReaderOverlay').classList.contains('active')) {
+                closeReader();
+            }
+        });
+        document.getElementById('readerPagesScroll').addEventListener('click', () => {
+            document.getElementById('chapterListPanel').classList.remove('open');
+        });
 
         // =====================
         // INITIALIZATION
