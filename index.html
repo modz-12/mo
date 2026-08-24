@@ -950,6 +950,12 @@ UI.toast('تم إنشاء النادي')}
 };
 window.Admin=Admin;
 
+// Expose module-scoped controllers for inline onclick handlers used by the UI.
+window.App=App;
+window.DB=DB;
+window.Auth=Auth;
+window.UI=UI;
+
 $('animeFilter')?.addEventListener('input',()=>App.renderAnime());
 $('animeGenreFilter')?.addEventListener('change',()=>App.renderAnime());
 
