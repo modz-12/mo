@@ -1595,28 +1595,8 @@
                         <p class="page-subtitle">تفاعل مع مجتمع الأنمي</p>
                     </div>
                 </div>
-                <div class="card mb-20">
-                    <div class="flex gap-10 mb-20">
-                        <img src="https://ui-avatars.com/api/?name=User&background=7c5cff&color=fff" style="width: 50px; height: 50px; border-radius: 50%;" id="postAvatar">
-                        <textarea class="form-control" id="postContent" placeholder="ماذا تريد أن تشارك؟"></textarea>
-                    </div>
-                    <div class="flex-between">
-                        <div class="flex gap-10">
-                            <button class="btn btn-outline btn-sm" onclick="addImageToPost()">
-                                <i class="fas fa-image"></i> صورة
-                            </button>
-                            <button class="btn btn-outline btn-sm" onclick="addPollToPost()">
-                                <i class="fas fa-poll"></i> استطلاع
-                            </button>
-                            <button class="btn btn-outline btn-sm" onclick="addLinkToPost()">
-                                <i class="fas fa-link"></i> رابط
-                            </button>
-                        </div>
-                        <button class="btn btn-primary" onclick="createPost()">
-                            <i class="fas fa-paper-plane"></i> نشر
-                        </button>
-                    </div>
-                    <div id="postExtras"></div>
+                <div class="card mb-20" id="postComposerCard">
+                    <!-- يُعاد بناء هذا الجزء من renderCommunityFeed حسب صلاحية النشر -->
                 </div>
                 <div id="communityFeed"></div>
             </div>
@@ -1802,6 +1782,42 @@
             poll: null,
             link: null
         };
+
+        // =====================
+        // PUBLISHER ACCESS (نشر المحتوى)
+        // تنبيه: هذا التحقق يتم في المتصفح فقط وهو وسيلة سهلة لتفعيل صلاحية
+        // "ناشر" للمستخدم نفسه. الحماية الحقيقية للبيانات موجودة في firestore.rules
+        // عبر حقل role في مستند المستخدم، وليس عبر كلمة السر نفسها.
+        // =====================
+        const PUBLISH_PASSWORD = '01103286334';
+        function canPublish() {
+            const role = (currentUser && currentUser.role) || (userData && userData.role);
+            return role === 'admin' || role === 'owner' || role === 'moderator' || role === 'publisher';
+        }
+        function requirePublisherOrPrompt(actionLabel) {
+            if (canPublish()) return true;
+            showToast(`هذه الميزة (${actionLabel}) مقصورة على المشرفين الناشرين`, 'warning');
+            navigateTo('settings');
+            return false;
+        }
+        async function activatePublisher(password) {
+            if (!currentUser) return;
+            if (password !== PUBLISH_PASSWORD) {
+                showToast('كلمة السر غير صحيحة', 'error');
+                return;
+            }
+            try {
+                await db.collection('users').doc(currentUser.uid).update({ role: 'publisher' });
+                currentUser.role = 'publisher';
+                userData.role = 'publisher';
+                showToast('تم تفعيل صلاحية النشر بنجاح', 'success');
+                checkAdminAccess();
+                if (currentPage === 'settings') loadSettings();
+                if (currentPage === 'community') renderCommunityFeed();
+            } catch (error) {
+                showToast('تعذر تفعيل صلاحية النشر: ' + error.message, 'error');
+            }
+        }
 
         // =====================
         // AUTHENTICATION
@@ -2078,17 +2094,32 @@
         });
 
         // Auth State Observer
+        // يمنع بقاء التطبيق عالقاً على شاشة تحميل بلا نهاية لو تعطلت قاعدة البيانات (rules غير منشورة، اتصال ضعيف...)
+        function withTimeout(promise, ms, label) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout:' + label)), ms))
+            ]);
+        }
+
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById('authScreen').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
-                await loadUserData();
-                await loadAllData();
-                setupRealtimeListeners();
-                const intendedPage = consumeIntendedPage();
-                navigateTo(intendedPage || 'home');
-                updateUserStatus('online');
+                try {
+                    await withTimeout(loadUserData(), 15000, 'loadUserData');
+                    await withTimeout(loadAllData(), 15000, 'loadAllData');
+                    setupRealtimeListeners();
+                    const intendedPage = consumeIntendedPage();
+                    navigateTo(intendedPage || 'home');
+                    updateUserStatus('online');
+                } catch (error) {
+                    hideLoading();
+                    console.error('App init failed:', error);
+                    showToast('تعذر الاتصال بقاعدة البيانات. تأكد من نشر ملف firestore.rules ومن اتصالك بالإنترنت', 'error');
+                    navigateTo('home');
+                }
             } else {
                 currentUser = null;
                 if (currentPage && currentPage !== 'home') rememberIntendedPage(currentPage);
@@ -2142,40 +2173,43 @@
         async function loadAllData() {
             try {
                 showLoading('تحميل البيانات...');
-                
-                // Load Users
-                const usersSnapshot = await db.collection('users').get();
+
+                // تحميل كل المجموعات بالتوازي بدل التتابع (كان هذا السبب الرئيسي في بطء التحميل)
+                const [
+                    usersSnapshot,
+                    postsSnapshot,
+                    animesSnapshot,
+                    mangasSnapshot,
+                    charactersSnapshot,
+                    newsSnapshot,
+                    clubsSnapshot
+                ] = await Promise.all([
+                    db.collection('users').limit(300).get(),
+                    db.collection('posts').orderBy('createdAt', 'desc').limit(100).get(),
+                    db.collection('animes').limit(300).get(),
+                    db.collection('mangas').limit(300).get(),
+                    db.collection('characters').limit(300).get(),
+                    db.collection('news').orderBy('createdAt', 'desc').limit(100).get(),
+                    db.collection('clubs').limit(200).get()
+                ]);
+
                 allUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // Load Posts (باستخدام authorId بدلاً من userId للتوافق مع القواعد)
-                const postsSnapshot = await db.collection('posts').orderBy('createdAt', 'desc').limit(100).get();
                 allPosts = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // Load Animes (باستخدام animes بدلاً من anime للتوافق مع القواعد)
-                const animesSnapshot = await db.collection('animes').get();
                 allAnime = animesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // Load Mangas (باستخدام mangas بدلاً من manga للتوافق مع القواعد)
-                const mangasSnapshot = await db.collection('mangas').get();
                 allManga = mangasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // Load Characters
-                const charactersSnapshot = await db.collection('characters').get();
                 allCharacters = charactersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // Load News
-                const newsSnapshot = await db.collection('news').orderBy('createdAt', 'desc').get();
                 allNews = newsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // Load Clubs
-                const clubsSnapshot = await db.collection('clubs').get();
                 allClubs = clubsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 hideLoading();
             } catch (error) {
                 console.error('Error loading data:', error);
                 hideLoading();
-                showToast('خطأ في تحميل البيانات', 'error');
+                if (error.code === 'permission-denied') {
+                    showToast('تم رفض الوصول لقاعدة البيانات — تأكد من نشر ملف firestore.rules في Firebase Console', 'error');
+                } else {
+                    showToast('خطأ في تحميل البيانات: ' + (error.message || 'غير معروف'), 'error');
+                }
             }
         }
 
@@ -2191,7 +2225,7 @@
 
         function checkAdminAccess() {
             const adminNav = document.getElementById('adminNavItem');
-            if (currentUser.role === 'admin' || currentUser.role === 'owner' || currentUser.role === 'moderator') {
+            if (canPublish()) {
                 adminNav.classList.remove('hidden');
             }
         }
@@ -2519,6 +2553,7 @@
         }
 
         function renderCommunityFeed() {
+            renderPostComposer();
             const feed = document.getElementById('communityFeed');
             if (allPosts.length === 0) {
                 feed.innerHTML = '<div class="card text-center"><p class="text-muted">لا توجد منشورات بعد</p></div>';
@@ -2527,14 +2562,55 @@
             feed.innerHTML = allPosts.map(post => renderPost(post)).join('');
         }
 
+        function renderPostComposer() {
+            const card = document.getElementById('postComposerCard');
+            if (!card) return;
+            if (canPublish()) {
+                card.innerHTML = `
+                    <div class="flex gap-10 mb-20">
+                        <img src="https://ui-avatars.com/api/?name=User&background=7c5cff&color=fff" style="width: 50px; height: 50px; border-radius: 50%;" id="postAvatar">
+                        <textarea class="form-control" id="postContent" placeholder="ماذا تريد أن تشارك؟"></textarea>
+                    </div>
+                    <div class="flex-between">
+                        <div class="flex gap-10">
+                            <button class="btn btn-outline btn-sm" onclick="addImageToPost()">
+                                <i class="fas fa-image"></i> صورة
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="addPollToPost()">
+                                <i class="fas fa-poll"></i> استطلاع
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="addLinkToPost()">
+                                <i class="fas fa-link"></i> رابط
+                            </button>
+                        </div>
+                        <button class="btn btn-primary" onclick="createPost()">
+                            <i class="fas fa-paper-plane"></i> نشر
+                        </button>
+                    </div>
+                    <div id="postExtras"></div>
+                `;
+            } else {
+                card.innerHTML = `
+                    <div class="text-center text-muted" style="padding:10px;">
+                        <i class="fas fa-lock" style="font-size:1.5rem;"></i>
+                        <p class="mt-10">النشر في المجتمع مقصور على المشرفين. لديك كلمة سر النشر؟</p>
+                        <button class="btn btn-outline btn-sm mt-10" onclick="navigateTo('settings')"><i class="fas fa-key"></i> تفعيل صلاحية النشر</button>
+                    </div>
+                `;
+            }
+        }
+
         function renderClubs() {
             const list = document.getElementById('clubsList');
+            const createBtn = canPublish()
+                ? `<button class="btn btn-primary mb-20" onclick="createClub()"><i class="fas fa-plus"></i> إنشاء نادٍ</button>`
+                : `<div class="card text-center text-muted mb-20"><i class="fas fa-lock"></i> إنشاء النوادي مقصور على المشرفين الناشرين</div>`;
             if (allClubs.length === 0) {
-                list.innerHTML = '<div class="card text-center"><p class="text-muted">لا توجد نوادي بعد. قم بإنشاء نادٍ جديد!</p><button class="btn btn-primary mt-20" onclick="createClub()"><i class="fas fa-plus"></i> إنشاء نادٍ</button></div>';
+                list.innerHTML = `<div class="card text-center"><p class="text-muted">لا توجد نوادي بعد</p></div>${canPublish() ? createBtn : ''}`;
                 return;
             }
             list.innerHTML = `
-                <button class="btn btn-primary mb-20" onclick="createClub()"><i class="fas fa-plus"></i> إنشاء نادٍ</button>
+                ${createBtn}
                 ${allClubs.map(club => `
                     <div class="card" onclick="viewClub('${club.id}')">
                         <h3><i class="fas fa-users"></i> ${club.name}</h3>
@@ -2962,6 +3038,20 @@
                     </div>
                     <button class="btn btn-primary" onclick="updateSettings()"><i class="fas fa-save"></i> حفظ</button>
                 </div>
+
+                <div class="card mt-20">
+                    <h3><i class="fas fa-key"></i> صلاحية النشر</h3>
+                    ${canPublish() ? `
+                        <p class="text-muted mt-10"><i class="fas fa-circle-check" style="color:var(--success);"></i> حسابك لديه صلاحية النشر (${currentUser.role}). يمكنك إضافة منشورات ونوادي ومحتوى من صفحة المجتمع/لوحة التحكم.</p>
+                    ` : `
+                        <p class="text-muted mt-10">هذه منصة مشاهدة: النشر (منشورات، نوادي، أنمي، مانجا، فصول، أخبار) مقصور على المشرفين فقط. إن كنت أحد المشرفين، أدخل كلمة السر لتفعيل صلاحية النشر لحسابك.</p>
+                        <div class="form-group mt-20">
+                            <label>كلمة سر النشر</label>
+                            <input type="password" class="form-control" id="publishPasswordInput" placeholder="••••••••">
+                        </div>
+                        <button class="btn btn-primary" onclick="activatePublisher(document.getElementById('publishPasswordInput').value)"><i class="fas fa-unlock"></i> تفعيل صلاحية النشر</button>
+                    `}
+                </div>
             `;
         }
 
@@ -3007,10 +3097,11 @@
         // ADMIN PANEL
         // =====================
         function renderAdminPanel() {
-            if (!currentUser.role || !['owner', 'admin', 'moderator'].includes(currentUser.role)) {
+            if (!canPublish()) {
                 document.getElementById('adminContent').innerHTML = '<div class="card"><p class="text-muted">غير مصرح لك بالوصول</p></div>';
                 return;
             }
+            const isFullAdmin = ['admin', 'owner', 'moderator'].includes(currentUser.role);
             const content = document.getElementById('adminContent');
             content.innerHTML = `
                 <div class="grid-3 mb-20">
@@ -3031,6 +3122,7 @@
                     </div>
                 </div>
                 
+                ${isFullAdmin ? `
                 <div class="card">
                     <h3>إدارة المستخدمين</h3>
                     <div class="mt-20">
@@ -3038,7 +3130,7 @@
                             <div class="card mb-10 flex-between">
                                 <div>
                                     <strong>${user.username}</strong>
-                                    <span class="badge badge-${user.role === 'admin' ? 'danger' : user.role === 'moderator' ? 'warning' : 'info'}">${user.role || 'user'}</span>
+                                    <span class="badge badge-${user.role === 'admin' ? 'danger' : (user.role === 'moderator' || user.role === 'publisher') ? 'warning' : 'info'}">${user.role || 'user'}</span>
                                     ${user.verified ? '<span class="badge badge-info">✓</span>' : ''}
                                 </div>
                                 <div>
@@ -3050,6 +3142,7 @@
                         `).join('')}
                     </div>
                 </div>
+                ` : ''}
                 
                 <div class="card mt-20">
                     <h3>إضافة محتوى</h3>
@@ -3316,6 +3409,7 @@
         // POST FUNCTIONS
         // =====================
         async function createPost() {
+            if (!requirePublisherOrPrompt('نشر منشور')) return;
             const content = document.getElementById('postContent').value.trim();
             if (!content && !postExtras.image && !postExtras.poll && !postExtras.link) {
                 showToast('اكتب شيئًا أولاً', 'warning');
@@ -3392,6 +3486,15 @@
             const url = window.location.href + '?post=' + postId;
             navigator.clipboard.writeText(url).then(() => {
                 showToast('تم نسخ رابط المنشور', 'success');
+            });
+        }
+
+        function shareNews(newsId) {
+            const url = window.location.href + '?news=' + newsId;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('تم نسخ رابط الخبر', 'success');
+            }).catch(() => {
+                showToast('تعذر نسخ الرابط', 'error');
             });
         }
 
@@ -3521,6 +3624,7 @@
         // CLUB FUNCTIONS
         // =====================
         async function createClub() {
+            if (!requirePublisherOrPrompt('إنشاء نادٍ')) return;
             const name = prompt('اسم النادي:');
             if (!name) return;
             const description = prompt('وصف النادي:');
@@ -3627,7 +3731,7 @@
                 <div class="flex gap-10 mt-20 flex-wrap">
                     <button class="btn btn-primary" onclick="addToFavorites('${manga.id}')"><i class="fas fa-heart"></i> مفضلة</button>
                     <button class="btn btn-outline" onclick="startReading('${manga.id}')"><i class="fas fa-book-open"></i> ابدأ القراءة</button>
-                    ${userData && (userData.role === 'admin' || userData.role === 'moderator') ? `
+                    ${canPublish() ? `
                         <button class="btn btn-outline" onclick="showAddChapterModal('${manga.id}')"><i class="fas fa-plus"></i> إضافة فصل</button>
                     ` : ''}
                 </div>
