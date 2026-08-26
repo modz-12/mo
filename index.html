@@ -2007,15 +2007,12 @@
         let postExtras = { image: null, poll: null, link: null };
         let authBusy = false;
 
-        // كلمة سر التفعيل (تتوافق مع قواعد Firebase)
-        const PUBLISH_PASSWORD = '01103286334';
-
         // ============================================================
         // الصلاحيات (تتوافق مع قواعد Firestore)
         // ============================================================
         function canPublish() {
             const role = (currentUser && currentUser.role) || (userData && userData.role);
-            return role === 'admin' || role === 'moderator';
+            return role === 'admin' || role === 'moderator' || role === 'publisher';
         }
 
         function canManageUsers() {
@@ -2030,28 +2027,8 @@
             return false;
         }
 
-        // ============================================================
-        // تفعيل صلاحية الإشراف (moderator) — متوافق مع قواعد Firestore
-        // ============================================================
-        async function activatePublisher(password) {
-            if (!currentUser) return;
-            if (password !== PUBLISH_PASSWORD) {
-                showToast('كلمة السر غير صحيحة', 'error');
-                return;
-            }
-            try {
-                await db.collection('users').doc(currentUser.uid).update({ role: 'moderator' });
-                currentUser.role = 'moderator';
-                userData.role = 'moderator';
-                showToast('تم تفعيل صلاحية الإشراف بنجاح', 'success');
-                checkAdminAccess();
-                if (currentPage === 'settings') loadSettings();
-                if (currentPage === 'community') renderCommunityFeed();
-            } catch (error) {
-                console.error('activatePublisher error:', error);
-                showToast('تعذر تفعيل الصلاحية: ' + (error.message || error.code), 'error');
-            }
-        }
+        // الصلاحيات الحساسة تُمنح من حساب Admin فقط.
+        // لا توجد كلمة مرور سرية داخل المتصفح؛ أي قيمة داخل JavaScript يمكن كشفها.
 
         // ============================================================
         // فحص قاعدة البيانات (تشخيص سريع)
@@ -2649,7 +2626,7 @@
                     } else {
                         await postRef.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) });
                         await addXP(1);
-                        await updateUserStats('likesReceived', 1, doc.data().authorId);
+                        // likesReceived is maintained by trusted backend logic; do not let the client forge it.
                         await sendNotification(doc.data().authorId, 'أعجب بمنشورك', 'heart');
                     }
                 }
@@ -3153,14 +3130,9 @@
               <button class="btn btn-primary" onclick="updateSettings()"><i class="fas fa-save"></i> حفظ</button>
             </div>
             <div class="card mt-20">
-              <h3><i class="fas fa-key"></i> صلاحية الإشراف والنشر</h3>
-              ${canPublish() ? `
-                <p class="text-muted mt-10"><i class="fas fa-circle-check" style="color:var(--success);"></i> حسابك لديه صلاحية النشر (${currentUser.role}). يمكنك إضافة منشورات ونوادي ومحتوى، وحذف أي منشور.</p>
-              ` : `
-                <p class="text-muted mt-10">النشر مقصور على المشرفين. أدخل كلمة السر لتفعيل الصلاحية.</p>
-                <div class="form-group mt-20"><label>كلمة سر الإشراف</label><input type="password" class="form-control" id="publishPasswordInput" placeholder="••••••••"></div>
-                <button class="btn btn-primary" onclick="activatePublisher(document.getElementById('publishPasswordInput').value)"><i class="fas fa-unlock"></i> تفعيل صلاحية الإشراف</button>
-              `}
+              <h3><i class="fas fa-shield-halved"></i> صلاحيات الحساب</h3>
+              <p class="text-muted mt-10">الدور الحالي: <strong>${currentUser.role||'user'}</strong></p>
+              <p class="text-muted mt-10">لأمان الموقع، لا توجد كلمة سر للنشر داخل المتصفح. صلاحيات الناشر والمشرف والمدير يمنحها المدير من لوحة الإدارة فقط.</p>
             </div>
             <div class="card mt-20">
               <h3><i class="fas fa-heart-pulse"></i> فحص الاتصال بقاعدة البيانات</h3>
@@ -3218,7 +3190,7 @@
                   <div class="admin-user-row">
                     <div class="user-info"><strong>${u.username}</strong><span class="badge badge-${u.role==='admin'?'danger':(u.role==='moderator'?'warning':'info')}">${u.role||'user'}</span>${u.verified ? '<span class="badge badge-info">✓</span>' : ''}</div>
                     <div class="user-actions">
-                      <button class="btn btn-sm btn-outline" onclick="changeRole('${u.id}','${u.role==='admin'?'user':'admin'}')">تغيير الدور</button>
+                      <select class="form-control btn-sm" style="width:auto;min-width:125px;" onchange="changeRole('${u.id}', this.value)"><option value="user" ${u.role==='user'||!u.role?'selected':''}>مستخدم</option><option value="publisher" ${u.role==='publisher'?'selected':''}>ناشر</option><option value="moderator" ${u.role==='moderator'?'selected':''}>مشرف</option><option value="admin" ${u.role==='admin'?'selected':''}>مدير</option></select>
                       <button class="btn btn-sm btn-outline" onclick="toggleVerify('${u.id}')">${u.verified?'إلغاء التوثيق':'توثيق'}</button>
                       <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">حذف</button>
                     </div>
@@ -3239,6 +3211,9 @@
         }
 
         async function changeRole(userId, newRole) {
+            if (!canManageUsers()) { showToast('هذه العملية للمدير فقط', 'warning'); return; }
+            if (!['user','publisher','moderator','admin'].includes(newRole)) { showToast('دور غير صالح', 'error'); return; }
+            if (userId === currentUser.uid && newRole !== 'admin') { showToast('لا يمكنك إزالة صلاحية المدير من حسابك', 'warning'); return; }
             try {
                 await db.collection('users').doc(userId).update({ role: newRole });
                 showToast('تم تغيير الدور', 'success');
@@ -3259,6 +3234,8 @@
         }
 
         async function deleteUser(userId) {
+            if (!canManageUsers()) { showToast('هذه العملية للمدير فقط', 'warning'); return; }
+            if (userId === currentUser.uid) { showToast('لا يمكنك حذف حسابك من هنا', 'warning'); return; }
             if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
             try {
                 await db.collection('users').doc(userId).delete();
@@ -3748,6 +3725,7 @@
             try {
                 await db.collection('notifications').add({
                     to: userId,
+                    from: currentUser.uid,
                     message,
                     icon: icon || 'bell',
                     read: false,
