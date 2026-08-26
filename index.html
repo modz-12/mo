@@ -1784,19 +1784,26 @@
         };
 
         // =====================
-        // PUBLISHER ACCESS (نشر المحتوى)
+        // PUBLISHER ACCESS (نشر المحتوى وإدارة المنشورات/النوادي)
         // تنبيه: هذا التحقق يتم في المتصفح فقط وهو وسيلة سهلة لتفعيل صلاحية
-        // "ناشر" للمستخدم نفسه. الحماية الحقيقية للبيانات موجودة في firestore.rules
+        // "مشرف" للمستخدم نفسه. الحماية الحقيقية للبيانات موجودة في firestore.rules
         // عبر حقل role في مستند المستخدم، وليس عبر كلمة السر نفسها.
+        // كلمة السر ترقّي المستخدم إلى role = 'moderator' مباشرة (ينشر ويحذف أي محتوى)
+        // لكن لا تعطيه أبداً صلاحيات إدارة المستخدمين (تغيير أدوار الآخرين/حذف حسابات) —
+        // دي مقصورة على role = 'admin' اللي بيتحدد يدوياً من Firestore Console فقط.
         // =====================
         const PUBLISH_PASSWORD = '01103286334';
         function canPublish() {
             const role = (currentUser && currentUser.role) || (userData && userData.role);
             return role === 'admin' || role === 'owner' || role === 'moderator' || role === 'publisher';
         }
+        function canManageUsers() {
+            const role = (currentUser && currentUser.role) || (userData && userData.role);
+            return role === 'admin' || role === 'owner';
+        }
         function requirePublisherOrPrompt(actionLabel) {
             if (canPublish()) return true;
-            showToast(`هذه الميزة (${actionLabel}) مقصورة على المشرفين الناشرين`, 'warning');
+            showToast(`هذه الميزة (${actionLabel}) مقصورة على المشرفين`, 'warning');
             navigateTo('settings');
             return false;
         }
@@ -1807,15 +1814,44 @@
                 return;
             }
             try {
-                await db.collection('users').doc(currentUser.uid).update({ role: 'publisher' });
-                currentUser.role = 'publisher';
-                userData.role = 'publisher';
-                showToast('تم تفعيل صلاحية النشر بنجاح', 'success');
+                await db.collection('users').doc(currentUser.uid).update({ role: 'moderator' });
+                currentUser.role = 'moderator';
+                userData.role = 'moderator';
+                showToast('تم تفعيل صلاحية الإشراف بنجاح', 'success');
                 checkAdminAccess();
                 if (currentPage === 'settings') loadSettings();
                 if (currentPage === 'community') renderCommunityFeed();
             } catch (error) {
-                showToast('تعذر تفعيل صلاحية النشر: ' + error.message, 'error');
+                console.error('activatePublisher error:', error);
+                if (error.code === 'permission-denied') {
+                    showToast('تم رفض العملية من قاعدة البيانات (permission-denied) — تأكد أن ملف firestore.rules الجديد منشور فعلاً في Firebase Console', 'error');
+                } else {
+                    showToast('تعذر تفعيل صلاحية الإشراف: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // فحص سريع للاتصال بقاعدة البيانات — يوضح فوراً هل المشكلة صلاحيات (rules)
+        // أو اتصال، بدل ما يفضل المستخدم يخمّن.
+        async function runDatabaseHealthCheck() {
+            const resultEl = document.getElementById('dbHealthResult');
+            if (resultEl) resultEl.innerHTML = '<div class="spinner"></div>';
+            const steps = [];
+            try {
+                await db.collection('users').doc(currentUser.uid).get();
+                steps.push('✅ القراءة من قاعدة البيانات تعمل');
+            } catch (e) {
+                steps.push('❌ فشلت القراءة: ' + e.code + ' — ' + e.message);
+            }
+            try {
+                await db.collection('users').doc(currentUser.uid).update({ lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
+                steps.push('✅ الكتابة على حسابك الشخصي تعمل');
+            } catch (e) {
+                steps.push('❌ فشلت الكتابة: ' + e.code + ' — ' + e.message);
+            }
+            steps.push(canPublish() ? '✅ حسابك لديه صلاحية النشر (' + currentUser.role + ')' : 'ℹ️ حسابك حالياً "مشاهد" فقط (role: ' + (currentUser.role || 'user') + ')');
+            if (resultEl) {
+                resultEl.innerHTML = '<div class="card mt-10" style="font-size:0.9rem; line-height:2;">' + steps.join('<br>') + '</div>';
             }
         }
 
@@ -2420,9 +2456,79 @@
                         <button class="post-action" onclick="event.stopPropagation(); sharePost('${post.id}')">
                             <i class="fas fa-share"></i>
                         </button>
+                        ${post.authorId === currentUser.uid ? `
+                            <button class="post-action" onclick="event.stopPropagation(); editPost('${post.id}')" title="تعديل">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                        ` : ''}
+                        ${(post.authorId === currentUser.uid || canPublish()) ? `
+                            <button class="post-action" onclick="event.stopPropagation(); deletePost('${post.id}')" title="حذف">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             `;
+        }
+
+        function editPost(postId) {
+            const post = allPosts.find(p => p.id === postId);
+            if (!post) return;
+            if (post.authorId !== currentUser.uid) {
+                showToast('يمكنك تعديل منشوراتك فقط', 'warning');
+                return;
+            }
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <h3><i class="fas fa-pen"></i> تعديل المنشور</h3>
+                <form onsubmit="submitEditPost(event, '${postId}')">
+                    <div class="form-group">
+                        <textarea class="form-control" id="editPostContent" rows="5">${(post.content || '').replace(/</g, '&lt;')}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> حفظ التعديل</button>
+                </form>
+            `;
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        async function submitEditPost(e, postId) {
+            e.preventDefault();
+            const newContent = document.getElementById('editPostContent').value.trim();
+            if (!newContent) { showToast('لا يمكن ترك المنشور فارغاً', 'warning'); return; }
+            try {
+                await db.collection('posts').doc(postId).update({
+                    content: newContent,
+                    editedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('تم تعديل المنشور', 'success');
+                closeModal();
+            } catch (error) {
+                if (error.code === 'permission-denied') {
+                    showToast('تم رفض التعديل — تأكد أن firestore.rules محدّثة ومنشورة', 'error');
+                } else {
+                    showToast('خطأ في التعديل: ' + error.message, 'error');
+                }
+            }
+        }
+
+        async function deletePost(postId) {
+            const post = allPosts.find(p => p.id === postId);
+            if (!post) return;
+            if (post.authorId !== currentUser.uid && !canPublish()) {
+                showToast('لا تملك صلاحية حذف هذا المنشور', 'warning');
+                return;
+            }
+            if (!confirm('هل أنت متأكد من حذف هذا المنشور؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+            try {
+                await db.collection('posts').doc(postId).delete();
+                showToast('تم حذف المنشور', 'success');
+            } catch (error) {
+                if (error.code === 'permission-denied') {
+                    showToast('تم رفض الحذف — تأكد أن firestore.rules محدّثة ومنشورة', 'error');
+                } else {
+                    showToast('خطأ في الحذف: ' + error.message, 'error');
+                }
+            }
         }
 
         function renderPoll(poll, postId) {
@@ -3040,17 +3146,24 @@
                 </div>
 
                 <div class="card mt-20">
-                    <h3><i class="fas fa-key"></i> صلاحية النشر</h3>
+                    <h3><i class="fas fa-key"></i> صلاحية الإشراف والنشر</h3>
                     ${canPublish() ? `
-                        <p class="text-muted mt-10"><i class="fas fa-circle-check" style="color:var(--success);"></i> حسابك لديه صلاحية النشر (${currentUser.role}). يمكنك إضافة منشورات ونوادي ومحتوى من صفحة المجتمع/لوحة التحكم.</p>
+                        <p class="text-muted mt-10"><i class="fas fa-circle-check" style="color:var(--success);"></i> حسابك لديه صلاحية النشر (${currentUser.role}). يمكنك إضافة منشورات ونوادي ومحتوى، وحذف أي منشور من صفحة المجتمع أو لوحة التحكم.</p>
                     ` : `
-                        <p class="text-muted mt-10">هذه منصة مشاهدة: النشر (منشورات، نوادي، أنمي، مانجا، فصول، أخبار) مقصور على المشرفين فقط. إن كنت أحد المشرفين، أدخل كلمة السر لتفعيل صلاحية النشر لحسابك.</p>
+                        <p class="text-muted mt-10">هذه منصة مشاهدة: النشر (منشورات، نوادي، أنمي، مانجا، فصول، أخبار) مقصور على المشرفين فقط. إن كنت أحد المشرفين، أدخل كلمة السر لتفعيل صلاحية الإشراف لحسابك.</p>
                         <div class="form-group mt-20">
-                            <label>كلمة سر النشر</label>
+                            <label>كلمة سر الإشراف</label>
                             <input type="password" class="form-control" id="publishPasswordInput" placeholder="••••••••">
                         </div>
-                        <button class="btn btn-primary" onclick="activatePublisher(document.getElementById('publishPasswordInput').value)"><i class="fas fa-unlock"></i> تفعيل صلاحية النشر</button>
+                        <button class="btn btn-primary" onclick="activatePublisher(document.getElementById('publishPasswordInput').value)"><i class="fas fa-unlock"></i> تفعيل صلاحية الإشراف</button>
                     `}
+                </div>
+
+                <div class="card mt-20">
+                    <h3><i class="fas fa-heart-pulse"></i> فحص الاتصال بقاعدة البيانات</h3>
+                    <p class="text-muted mt-10">لو حاسس إن حاجة مش شغالة (نشر، تعديل، حذف)، اضغط الزر ده أولاً — هيوضحلك بالظبط هل المشكلة صلاحيات (rules) ولا اتصال.</p>
+                    <button class="btn btn-outline mt-10" onclick="runDatabaseHealthCheck()"><i class="fas fa-stethoscope"></i> فحص الآن</button>
+                    <div id="dbHealthResult"></div>
                 </div>
             `;
         }
@@ -3101,7 +3214,7 @@
                 document.getElementById('adminContent').innerHTML = '<div class="card"><p class="text-muted">غير مصرح لك بالوصول</p></div>';
                 return;
             }
-            const isFullAdmin = ['admin', 'owner', 'moderator'].includes(currentUser.role);
+            const isFullAdmin = canManageUsers();
             const content = document.getElementById('adminContent');
             content.innerHTML = `
                 <div class="grid-3 mb-20">
